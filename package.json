@@ -1,0 +1,16 @@
+{
+  "name": "forja",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.3.0",
+  "scripts": {
+    "dev": "pnpm --filter @forja/desktop dev",
+    "build": "pnpm --filter @forja/desktop build",
+    "typecheck": "pnpm --filter @forja/desktop typecheck",
+    "test": "pnpm --filter @forja/desktop test",
+    "desktop": "pnpm --filter @forja/desktop tauri dev",
+    "bundle": "pnpm --filter @forja/desktop tauri build",
+    "daemon": "cargo run -p forja-daemon",
+    "check": "cargo test --workspace --exclude forja-desktop && pnpm typecheck && pnpm test && pnpm build"
+  }
+}

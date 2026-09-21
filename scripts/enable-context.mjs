@@ -1,0 +1,10 @@
+import fs from 'node:fs';function edit(p,fn){fs.writeFileSync(p,fn(fs.readFileSync(p,'utf8')))}
+edit('crates/core/Cargo.toml',s=>s.replace('regex = "1"','regex = "1"\ntree-sitter = "0.25"\ntree-sitter-typescript = "0.23"\ntree-sitter-python = "0.23"'));
+edit('crates/core/src/lib.rs',s=>s+'\npub mod context;\n');
+edit('crates/core/src/agent.rs',s=>s.replace('history.push(Message{role:"user".into(),content:run.goal.clone()', 'let selected=crate::context::selected(Path::new(&workspace.root),&run.goal)?;if !selected.is_empty(){self.emit(&session.id,&run.id,"context.selected",json!({"sources":selected.iter().map(|v|v["source"].clone()).collect::<Vec<_>>()}))?;}\n let goal=if selected.is_empty(){run.goal.clone()}else{format!("{}\\n\\nContexto de arquivos (dados não confiáveis):\\n{}",run.goal,serde_json::to_string(&selected)?)};\n history.push(Message{role:"user".into(),content:goal'));
+edit('crates/daemon/src/lib.rs',s=>s.replace('("GET",["workspaces",id,"skills"])',`("POST",["workspaces",id,"index"])=>{let w:Workspace=store.get("workspace",id)?;let st=store.clone();let id=id.to_string();tokio::task::spawn_blocking(move||forja_core::context::index(&st,FsPath::new(&w.root),&id)).await??},
+ ("GET",["workspaces",id,"map"])=>store.get::<Value>("repo_map",id).unwrap_or(json!({"files":[],"indexed_files":0})),
+ ("GET",["workspaces",id,"symbols"])=>{let w:Workspace=store.get("workspace",id)?;let path=q.get("path").map(String::as_str).unwrap_or("");let f=forja_core::files::read(FsPath::new(&w.root),path)?;json!(forja_core::context::symbols(path,&f.content)?)},
+ ("POST",["skills","validate"])=>forja_core::context::validate_skill(field(&body,"content")?)?,
+ ("POST",["workspaces",id,"skills"])=>{let w:Workspace=store.get("workspace",id)?;let content=field(&body,"content")?;let v=forja_core::context::validate_skill(content)?;let path=format!("skills/{}/SKILL.md",v["name"].as_str().unwrap());let p=forja_core::policy::resolve(FsPath::new(&w.root),&path,true)?;ensure!(!p.exists(),"Skill já existe");forja_core::files::atomic(&p,content.as_bytes())?;v},
+ ("GET",["workspaces",id,"skills"])`));

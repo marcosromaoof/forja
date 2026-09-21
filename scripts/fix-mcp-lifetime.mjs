@@ -1,0 +1,1 @@
+import fs from 'node:fs';let p='crates/core/src/mcp.rs',s=fs.readFileSync(p,'utf8');s=s.replace('tokio::select! {\n            r = tokio::time::timeout(Duration::from_secs(15), conn.rpc(&format!("{kind}/list"),','let method = format!("{kind}/list");\n        tokio::select! {\n            r = tokio::time::timeout(Duration::from_secs(15), conn.rpc(&method,');fs.writeFileSync(p,s);

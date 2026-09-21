@@ -1,0 +1,7 @@
+import {useEffect,useRef} from 'react';import {X} from 'lucide-react';
+export function IconButton({label,children,onClick,active=false}:{label:string;children:React.ReactNode;onClick:()=>void;active?:boolean}){return <button className={'icon-button '+(active?'active':'')} title={label} aria-label={label} onClick={onClick}>{children}</button>}
+export function Modal({title,onClose,children,className=''}:{title:string;onClose:()=>void;children:React.ReactNode;className?:string}){
+ const ref=useRef<HTMLDivElement>(null);
+ useEffect(()=>{const prior=document.activeElement as HTMLElement;ref.current?.querySelector<HTMLElement>('input,button,select')?.focus();const key=(e:KeyboardEvent)=>{if(e.key==='Escape')onClose();if(e.key==='Tab'){const a=ref.current?.querySelectorAll<HTMLElement>('button:not(:disabled),input,select,textarea');if(!a?.length)return;const first=a[0],last=a[a.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}};document.addEventListener('keydown',key);return()=>{document.removeEventListener('keydown',key);prior?.focus()}},[]);
+ return <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><div className={'modal '+className} ref={ref} role="dialog" aria-modal="true" aria-label={title}><header><h2>{title}</h2><IconButton label="Fechar" onClick={onClose}><X size={20}/></IconButton></header>{children}</div></div>
+}

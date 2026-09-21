@@ -1,0 +1,1 @@
+import fs from 'node:fs';const p='crates/daemon/src/lib.rs';let s=fs.readFileSync(p,'utf8');s='mod clone;\n'+s;s=s.replace('("POST",["workspaces"])=>{','("POST",["workspaces","clone"])=>{ensure!(!s.engine.offline.load(Ordering::SeqCst),"Modo offline ativo");json!(clone::clone_workspace(store,&body).await?)},\n ("POST",["workspaces"])=>{');fs.writeFileSync(p,s);

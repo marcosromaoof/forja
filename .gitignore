@@ -1,0 +1,38 @@
+# Dependências e artefatos de compilação
+node_modules/
+target/
+dist/
+*.tsbuildinfo
+
+# Dados locais do FORJA e resultados de ferramentas
+.forja/
+.playwright-mcp/
+test-results/
+playwright-report/
+coverage/
+forja-*.png
+*.log
+
+# Configuração local e credenciais
+.env
+.env.*
+!.env.example
+*.local
+*.secret
+*.token
+credentials*.json
+secrets*.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Bancos, journals e backups locais
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.bak
+*.backup
