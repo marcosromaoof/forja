@@ -1,27 +1,37 @@
 # FORJA
 
-Aplicativo desktop de programação com agentes de IA. Windows primeiro, interface em português e armazenamento local. Este repositório contém uma implementação em desenvolvimento do plano aprovado; o escopo completo ainda não está concluído.
+Ambiente de programação desktop com agentes de IA, editor de código e execução assistida. O FORJA combina conversa, planejamento, alterações em arquivos e verificação do resultado em um projeto local. A interface é em português e o desenvolvimento prioriza Windows.
 
-Consulte o [índice de documentação](docs/README.md), o [estado atual](docs/STATUS.md) e o [trabalho restante](docs/ROADMAP.md). Segurança e tratamento de dados estão descritos em [SECURITY.md](SECURITY.md) e [docs/DATA_AND_PRIVACY.md](docs/DATA_AND_PRIVACY.md).
+> **Estado do projeto:** versão de desenvolvimento. O fluxo principal pode ser executado localmente, mas ainda não há instalador validado para uso geral. Consulte o [estado da implementação](docs/STATUS.md) antes de depender de uma integração específica.
 
-## Desenvolvimento no Windows
+## O que já é possível fazer
 
-Pré-requisitos: Rust com toolchain MSVC, ferramentas C++ do Visual Studio, Node.js >=22.22.2, pnpm e WebView2. Git é necessário para operações de repositório. Docker e WSL não são exigidos.
+| Área | Funcionalidade disponível |
+| --- | --- |
+| Projetos e conversas | Criar ou abrir um workspace, manter conversas por projeto e recuperar o histórico após reiniciar |
+| Planejamento | Criar um plano estruturado, responder perguntas interativas e iniciar **Implementar Plano** na mesma conversa |
+| Implementação | Revisar aprovações, aplicar alterações com hash-base, acompanhar checkpoints, diff e resultados de testes |
+| IDE | Editar com Monaco, usar terminal, buscar arquivos e símbolos e consultar diagnósticos LSP de TypeScript/JavaScript e Python |
+| Modelos | Configurar provedores e perfis, selecionar executor e revisores, acompanhar o uso de contexto e compactar o histórico |
+| Extensões | Usar skills, hooks, MCP, agentes por projeto, busca web e navegação automatizada conforme suas permissões |
+
+O fluxo de planejamento mantém um **documento de plano**, um **estado inicial da implementação** e **checkpoints de progresso**. Assim, o agente consegue consultar o que foi aprovado, o que já mudou e o que ainda falta mesmo após compactação de contexto ou reinício.
+
+## Começar no Windows
+
+Você precisa de Rust com toolchain MSVC, ferramentas C++ do Visual Studio, Node.js 22.22.2 ou posterior, pnpm, Git e WebView2. Docker e WSL não são necessários.
 
 Na raiz do repositório:
 
 ```powershell
 pnpm install
 cargo build -p forja-daemon
-```
-
-Para executar a interface desktop em desenvolvimento:
-
-```powershell
 pnpm desktop
 ```
 
-Para testar somente a interface no navegador, execute em dois terminais:
+No primeiro uso, abra uma pasta de projeto, configure um provedor e escolha explicitamente um modelo. O FORJA não seleciona automaticamente um serviço de nuvem. Ollama e LM Studio exigem que seus servidores estejam em execução; provedores remotos exigem credenciais próprias.
+
+Para abrir apenas a prévia web de desenvolvimento, execute em terminais separados:
 
 ```powershell
 cargo run -p forja-daemon
@@ -31,68 +41,45 @@ cargo run -p forja-daemon
 pnpm dev
 ```
 
-Abra http://127.0.0.1:1420. A ponte do servidor Vite é exclusiva de desenvolvimento: o token do daemon fica no processo do servidor, fora do JavaScript da página.
+A prévia estará em `http://127.0.0.1:1420/`. Ela usa uma ponte local de desenvolvimento; não substitui o aplicativo desktop. Consulte o [guia de desenvolvimento](docs/DEVELOPMENT.md) para configuração, testes e solução de problemas.
 
-O desktop procura forja-daemon.exe ao lado do executável e o inicia quando necessário. O empacotamento final do daemon no instalador ainda está pendente.
+## Um fluxo típico
 
-## Primeiro uso
+1. Abra um projeto e crie uma conversa.
+2. Selecione **Planejamento** e descreva a tarefa. Responda às escolhas que o agente apresentar.
+3. Revise o plano persistido e clique em **Implementar Plano**.
+4. Autorize cada ação necessária, acompanhe as etapas e confira arquivos alterados, diffs e testes.
+5. Se a execução for interrompida, reabra a conversa e consulte o último checkpoint antes de continuar.
 
-1. Abra ou crie uma pasta de projeto.
-2. Em Modelos, configure o endpoint e escolha explicitamente o modelo.
-3. Envie um objetivo. Use @caminho/arquivo para incluir contexto do projeto.
-4. Revise as aprovações de edição e comando. O terminal nativo tem isolamento reduzido.
-5. Consulte histórico, saída das ferramentas e checkpoints.
+O terminal e outros processos nativos autorizados executam com a autoridade da sua conta Windows e são identificados no aplicativo como **isolamento reduzido**.
 
-Ollama e LM Studio dependem de servidores configurados e iniciados pelo usuário. Provedores de nuvem exigem suas próprias credenciais. A aplicação não escolhe um serviço de nuvem nem troca para ele silenciosamente.
+## Documentação
 
-Em Contexto, atualize o índice para navegar até a linha dos arquivos e símbolos. Em Inteligência de código, revise e autorize o servidor TypeScript/JavaScript ou Python. O editor oferece hover, sugestões, F12 e diagnósticos no painel Problemas. Os servidores analisam também o texto não salvo. Em Skills, crie e valide arquivos SKILL.md no projeto. O agente recebe os metadados e pode carregar o corpo e referências sob demanda com skills.read, verificando o hash e registrando a origem. Declarações allowed-tools não ampliam permissões e nenhum script é executado durante a leitura. Use Selecionar skills no compositor para incluir explicitamente até oito skills neste envio. A seleção é validada por hash e preservada em caso de erro. Explore recursos de texto no seletor ou no painel, sem executar scripts. Consulte [docs/SKILLS.md](docs/SKILLS.md) para API, limites e comportamento do histórico. O formato segue [Agent Skills](https://agentskills.io/specification), com limites locais documentados em STATUS.
+O [índice da documentação](docs/README.md) reúne todos os guias. Para ir direto ao assunto:
 
-Em Hooks, configure comandos antes/depois das consultas ao modelo, antes da conclusão ou antes/depois de ferramentas específicas e em suas falhas. Um exemplo é executar testes após um patch. Cada acionamento exige aprovação individual. Falha, timeout ou negação interrompem a execução e preservam alterações anteriores. Edite, ative/desative ou reordene os hooks pelo painel. Edições concorrentes são detectadas; alterações de conteúdo revogam aprovações antigas. Novas configurações e mudanças de ordem valem para a próxima execução; Consulta e Planejamento não executam hooks nativos. Consulte [docs/HOOKS.md](docs/HOOKS.md) para limites, API e eventos.
-
-Em Servidores MCP, configure transporte e versão. Salvar não executa o programa. A conexão exige revisão explícita; cada chamada de ferramenta exige aprovação própria. Tokens HTTP ficam no cofre do sistema. OAuth e extensões MCP ainda não estão disponíveis.
-
-## Dados
-
-O diretório padrão no Windows é %LOCALAPPDATA%/Forja. FORJA_DATA_DIR permite apontar um diretório de desenvolvimento separado. Esse diretório contém SQLite, blobs, configurações persistidas e o arquivo privado de descoberta do daemon.
-
-Não compartilhe daemon.json: ele contém o token local de autenticação. Não coloque chaves de API em URLs ou manifests. As chaves configuradas pela interface são armazenadas no cofre do sistema.
-
-Em Configurações, Backup e recuperação cria uma pasta com o banco SQLite, blobs e manifesto SHA-256. A cópia não contém as credenciais do cofre, o token do daemon nem todos os arquivos das pastas de projeto. Verificar integridade valida os hashes e o banco; Restaurar cria uma nova pasta de dados, preservando a pasta atual.
-
-A CLI também verifica e restaura sem um daemon ativo:
-
-```powershell
-.\target\debug\forja.exe backup-verify C:\Backups\backup-ID
-.\target\debug\forja.exe restore C:\Backups\backup-ID --destination D:\Forja-recuperado
-```
-
-Para usar uma restauração, encerre o FORJA e o daemon. Defina FORJA_DATA_DIR para o caminho restaurado no ambiente que inicia os executáveis e abra o aplicativo. Credenciais de outra máquina precisam ser configuradas novamente. Uma cópia incompleta é recusada ao abrir; a recuperação nunca repete ferramentas automaticamente.
+| Quero... | Leia |
+| --- | --- |
+| Aprender a usar projetos, chat, planos, modelos e agentes | [Guia do usuário](docs/USER_GUIDE.md) |
+| Instalar dependências, executar e testar o código | [Desenvolvimento](docs/DEVELOPMENT.md) |
+| Entender processos, persistência e limites de confiança | [Arquitetura](docs/ARCHITECTURE.md) |
+| Consultar rotas e contratos locais | [API](docs/API.md) |
+| Saber onde ficam dados e credenciais | [Dados e privacidade](docs/DATA_AND_PRIVACY.md) e [Segurança](SECURITY.md) |
+| Ver o que funciona e o que falta | [Estado atual](docs/STATUS.md), [matriz de requisitos](docs/REQUIREMENTS_MATRIX.md) e [roadmap](docs/ROADMAP.md) |
 
 ## Verificação
 
 ```powershell
+cargo fmt --all -- --check
 cargo test --workspace --exclude forja-desktop
+pnpm typecheck
 pnpm test
 pnpm build
-cargo build -p forja-desktop
 ```
 
-Antes de preparar um commit, revise também `git status --short --ignored`, o conteúdo do índice e os padrões de segredo. Bancos, `.env`, credenciais, logs, screenshots e dados `.forja/` estão excluídos do versionamento.
+Os testes incluem fluxos determinísticos de agente e contratos de integração. Eles não substituem a validação com credenciais, serviços e hardware reais. O resultado mais recente e as limitações conhecidas estão em [docs/STATUS.md](docs/STATUS.md).
 
-Os testes de integração usam modelos e servidores determinísticos apenas para testes. Incluem alteração real de arquivo, aprovação, execução de teste Node.js, streaming interrompido, recuperação sem repetir ferramentas e backup/restauração pela CLI. Os testes LSP usam TypeScript Language Server e Pyright reais instalados pelo pnpm.
+## Escopo e licença
 
-## Organização
+O FORJA é um produto local em desenvolvimento. Marketplace público, contas FORJA e infraestrutura hospedada não fazem parte desta entrega. Integrações como ComfyUI, plugins isolados, runner remoto e instalador final ainda estão no [roadmap](docs/ROADMAP.md).
 
-- apps/desktop — React, Monaco, xterm e ponte Tauri.
-- apps/cli — cliente de linha de comando.
-- crates/core — política, armazenamento, agente, ferramentas, contexto e provedores.
-- crates/daemon — API autenticada em loopback.
-- crates/daemon/tests — fluxos e contratos de integração.
-- skills/revisar-forja — skill de exemplo criada pela interface.
-- docs — estado e critérios de entrega.
-
-Nenhum marketplace público, conta FORJA ou infraestrutura hospedada faz parte desta entrega.
-
-## Licença
-
-O código está disponível sob a [licença MIT](LICENSE).
+O código está sob a [licença MIT](LICENSE). Para contribuir, leia [CONTRIBUTING.md](CONTRIBUTING.md).

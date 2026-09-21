@@ -44,7 +44,7 @@ A exportação de conversa pode conter código, comandos, resultados, planos, ca
 
 ## Proteção do repositório
 
-O `.gitignore` exclui bancos (`*.db`, `*.sqlite*`), backups, `.forja/`, `.env*`, chaves/certificados, credenciais JSON, tokens, logs, screenshots de validação, dependências e builds. Antes do baseline local desta revisão, o conjunto candidato ao commit foi verificado por nome, tamanho e padrões de segredo. Nenhuma chave, token, banco ou credencial real foi encontrada.
+O `.gitignore` exclui bancos (`*.db`, `*.sqlite*`), backups, `.forja/`, `.env*`, chaves/certificados, credenciais JSON, tokens, logs, screenshots de validação, dependências e builds. Antes da publicação inicial do código, o conjunto candidato ao commit foi verificado por nome, tamanho e padrões de segredo. Nenhuma chave, token, banco ou credencial real foi encontrada nessa revisão.
 
 Essa verificação não prova que textos de projeto futuros não terão informação confidencial. Todo commit deve revisar exatamente o índice preparado, inclusive documentação, fixtures e lockfiles.
 

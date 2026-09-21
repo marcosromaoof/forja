@@ -1,24 +1,28 @@
 # Documentação do FORJA
 
-Esta pasta descreve o estado real do FORJA 0.1.0. O produto está em desenvolvimento e ainda não é uma distribuição pronta para usuários finais. A especificação funcional continua sendo o alvo; [STATUS.md](STATUS.md) separa o que já funciona do que ainda precisa ser entregue.
+O FORJA está em desenvolvimento. Comece pelo guia que corresponde à sua tarefa; [STATUS.md](STATUS.md) indica o que já foi validado e o que ainda é parcial ou pendente.
 
-## Guias
+## Usar o aplicativo
 
-- [Guia do usuário](USER_GUIDE.md): primeiro uso, projetos, conversas, planos, modelos, contexto, agentes e recuperação.
-- [Desenvolvimento](DEVELOPMENT.md): pré-requisitos, execução local, testes, estrutura e fluxo de contribuição.
-- [Arquitetura](ARCHITECTURE.md): componentes, persistência, execução, limites de confiança e recuperação.
-- [API local](API.md): autenticação, erros, paginação e grupos de rotas `/v1`.
-- [Dados e privacidade](DATA_AND_PRIVACY.md): dados persistidos, credenciais, serviços remotos, exportação e limpeza.
-- [Matriz de requisitos](REQUIREMENTS_MATRIX.md): rastreabilidade entre capacidades pedidas, implementação e evidência.
-- [Trabalho restante](ROADMAP.md): backlog organizado por risco e por etapa do produto.
-- [Estado e evidências](STATUS.md): inventário detalhado da implementação e validações executadas.
-- [Skills](SKILLS.md) e [Hooks](HOOKS.md): contratos, limites e comportamento específico.
-- [Política de segurança](../SECURITY.md): reporte, controles e limitações conhecidas.
+- [Guia do usuário](USER_GUIDE.md) — projetos, conversas, planos, chat, modelos, contexto, agentes, busca web e recuperação.
+- [Skills](SKILLS.md) — formato, seleção, carregamento e limites.
+- [Hooks](HOOKS.md) — eventos, configuração, aprovações e falhas.
+- [Dados e privacidade](DATA_AND_PRIVACY.md) — armazenamento local, cofre de credenciais, serviços remotos, backup e exclusão.
 
-## Fonte de verdade
+## Desenvolver e integrar
 
-Contratos serializados vivem em `crates/core/src/contracts.rs`; as rotas ficam em `crates/daemon/src/lib.rs`; a política de ferramentas e caminhos fica em `crates/core/src/policy.rs`. Quando a documentação divergir do código, trate o código e os testes da revisão atual como comportamento observado e abra uma correção documental.
+- [Desenvolvimento](DEVELOPMENT.md) — pré-requisitos, execução local, testes, estrutura do monorepo e fluxo de mudança.
+- [Arquitetura](ARCHITECTURE.md) — processos, contratos, persistência, agente, política e recuperação.
+- [API local](API.md) — autenticação, erros e rotas `/v1`.
+- [Segurança](../SECURITY.md) — modelo de ameaça, reporte e limites conhecidos.
+- [Contribuição](../CONTRIBUTING.md) — critérios para mudanças e revisões.
 
-## Estado desta revisão
+## Acompanhar a implementação
 
-Esta revisão foi preparada como baseline local. Nenhum dado de execução, banco SQLite, chave de API, token do daemon, arquivo `.env`, captura de tela ou diretório de dependências faz parte do conteúdo versionado. Consulte [Dados e privacidade](DATA_AND_PRIVACY.md) e [SECURITY.md](../SECURITY.md) para os detalhes da verificação.
+- [Estado atual](STATUS.md) — funcionalidades, evidências de teste e limites operacionais.
+- [Matriz de requisitos](REQUIREMENTS_MATRIX.md) — capacidade solicitada, estado e trabalho para aceite.
+- [Roadmap](ROADMAP.md) — pendências organizadas por prioridade e etapa.
+
+## Onde o comportamento é definido
+
+Os contratos serializados estão em [contracts.rs](../crates/core/src/contracts.rs), as rotas em [lib.rs](../crates/daemon/src/lib.rs) e a política de ferramentas e caminhos em [policy.rs](../crates/core/src/policy.rs). A documentação descreve o comportamento da revisão atual; se houver divergência, confirme no código e nos testes antes de alterar uma integração.
