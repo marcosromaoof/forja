@@ -32,56 +32,45 @@ impl<E: Into<anyhow::Error>> From<E> for Error {
         Self(e.into())
     }
 }
+/// Mapeia uma categoria de erro classificada para o status HTTP da API.
+/// Os códigos legados do daemon são preservados para não quebrar clientes
+/// (ex.: falha de credencial continua 502, indisponibilidade vira 502 quando
+/// há status HTTP explícito do provedor e 503 quando é falha de rede local).
+fn http_status_for(kind: forja_core::error_class::ErrorKind, had_http_status: bool) -> StatusCode {
+    use forja_core::error_class::ErrorKind as K;
+    match kind {
+        K::Unauthorized | K::InvalidResponse | K::Upstream => StatusCode::BAD_GATEWAY,
+        K::Forbidden => StatusCode::BAD_GATEWAY,
+        K::RateLimited => StatusCode::TOO_MANY_REQUESTS,
+        K::Unavailable => {
+            if had_http_status {
+                StatusCode::BAD_GATEWAY
+            } else {
+                StatusCode::SERVICE_UNAVAILABLE
+            }
+        }
+        K::Timeout => StatusCode::GATEWAY_TIMEOUT,
+        K::Misconfigured => StatusCode::UNPROCESSABLE_ENTITY,
+        K::NotFound => StatusCode::NOT_FOUND,
+        K::Conflict => StatusCode::CONFLICT,
+        K::Cancelled => StatusCode::BAD_REQUEST,
+        K::InvalidRequest | K::Other => StatusCode::BAD_REQUEST,
+    }
+}
+
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         let message = self.0.to_string();
-        let lower = message.to_ascii_lowercase();
-        let (status, code, retryable) = if lower.contains("http 401")
-            || lower.contains("http 403")
-            || lower.contains("unauthorized")
-        {
-            (StatusCode::BAD_GATEWAY, "provider_auth_failed", false)
-        } else if lower.contains("http 429") || lower.contains("rate limit") {
-            (StatusCode::TOO_MANY_REQUESTS, "provider_rate_limited", true)
-        } else if lower.contains("error sending request")
-            || lower.contains("connection refused")
-            || lower.contains("timed out")
-            || lower.contains("dns")
-        {
-            (
-                StatusCode::SERVICE_UNAVAILABLE,
-                "provider_unavailable",
-                true,
-            )
-        } else if lower.contains("formato de catálogo")
-            || lower.contains("expected value at line")
-            || (lower.contains("resposta") && (lower.contains("json") || lower.contains("formato")))
-        {
-            (StatusCode::BAD_GATEWAY, "provider_invalid_response", true)
-        } else if lower.contains("http 5") {
-            (StatusCode::BAD_GATEWAY, "provider_upstream_error", true)
-        } else if lower.contains("configure uma chave")
-            || lower.contains("url relativa")
-            || lower.contains("relative url")
-            || lower.contains("tipo de provedor desconhecido")
-            || lower.contains("url deve conter")
-            || lower.contains("use https")
-            || lower.contains("precisa usar loopback")
-        {
-            (
-                StatusCode::UNPROCESSABLE_ENTITY,
-                "provider_misconfigured",
-                false,
-            )
-        } else {
-            (StatusCode::BAD_REQUEST, "request_failed", false)
-        };
+        let classified = forja_core::error_class::ClassifiedError::classify(message);
+        let had_http_status =
+            forja_core::error_class::http_status_from_message(&classified.message).is_some();
+        let status = http_status_for(classified.kind, had_http_status);
         (
             status,
             Json(ApiError {
-                code: code.into(),
-                message,
-                retryable,
+                code: classified.kind.code().into(),
+                message: classified.message,
+                retryable: classified.kind.is_retryable(),
                 details: json!({}),
                 correlation_id: forja_core::id(),
             }),
@@ -1642,7 +1631,7 @@ mod tests {
             (
                 "Provedor respondeu HTTP 503 Service Unavailable",
                 StatusCode::BAD_GATEWAY,
-                "provider_upstream_error",
+                "provider_unavailable",
                 true,
             ),
         ] {
@@ -1655,6 +1644,35 @@ mod tests {
             assert_eq!(body.code, code);
             assert_eq!(body.retryable, retryable);
             assert!(!body.correlation_id.is_empty());
+        }
+    }
+    #[tokio::test]
+    async fn rate_limited_and_timeout_errors_are_retryable() {
+        for (message, status, code) in [
+            (
+                "Modelo respondeu HTTP 429 Too Many Requests",
+                StatusCode::TOO_MANY_REQUESTS,
+                "provider_rate_limited",
+            ),
+            (
+                "request timed out after 30s",
+                StatusCode::GATEWAY_TIMEOUT,
+                "timeout",
+            ),
+            (
+                "Provedor respondeu HTTP 502 Bad Gateway",
+                StatusCode::BAD_GATEWAY,
+                "provider_upstream_error",
+            ),
+        ] {
+            let response = Error(anyhow::anyhow!(message)).into_response();
+            assert_eq!(response.status(), status, "status para: {message}");
+            let bytes = axum::body::to_bytes(response.into_body(), 64_000)
+                .await
+                .unwrap();
+            let body: ApiError = serde_json::from_slice(&bytes).unwrap();
+            assert_eq!(body.code, code);
+            assert!(body.retryable, "{code} deve ser retryable");
         }
     }
     #[tokio::test]

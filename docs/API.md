@@ -88,7 +88,7 @@ Aplicar código exige hash-base válido e cria checkpoint. Implementar um plano 
 
 O corpo pode conter `api_key` apenas ao criar/atualizar uma credencial. A resposta contém no máximo uma referência opaca. Essa referência é definida pelo daemon e não é aceita como autoridade do cliente.
 
-Falhas de upstream usam códigos como `provider_auth_failed`, `provider_unavailable`, `provider_rate_limited`, `provider_invalid_response`, `provider_misconfigured` e `provider_upstream_error`.
+Os códigos de erro são derivados da enumeração `ErrorKind` em `crates/core/src/error_class.rs` (classificação estruturada, com prioridade ao status HTTP numérico extraído da mensagem). Falhas de upstream usam `provider_auth_failed`, `provider_unavailable`, `provider_rate_limited`, `provider_invalid_response`, `provider_misconfigured` e `provider_upstream_error`. Demais categorias: `cancelled`, `timeout`, `not_found`, `conflict`, `invalid_request` e `request_failed` (padrão). O campo `retryable` é definido por `ErrorKind::is_retryable`.
 
 ## Busca, agentes e artefatos
 

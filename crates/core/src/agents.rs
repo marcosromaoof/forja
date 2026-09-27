@@ -1,4 +1,4 @@
-use crate::{contracts::*, storage::Store};
+use crate::{contracts::*, error_class::ErrorKind, storage::Store};
 use anyhow::{ensure, Context, Result};
 use base64::Engine as _;
 use serde_json::{json, Value};
@@ -645,7 +645,7 @@ pub async fn run_task(
                             &session.id,
                             &parent_run.id,
                             &visual.id,
-                            error.to_string().to_lowercase().contains("cancel"),
+                            ErrorKind::from_message(&error.to_string()) == ErrorKind::Cancelled,
                         );
                         final_text.push_str(&format!("\n\nRevisão visual indisponível: {}", error));
                     }

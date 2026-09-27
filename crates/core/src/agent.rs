@@ -1,5 +1,6 @@
 use crate::{
     contracts::*,
+    error_class::ErrorKind,
     policy::{self, Decision},
     storage::Store,
 };
@@ -1418,7 +1419,7 @@ impl Engine {
                             &run.session_id,
                             &run.id,
                             &profile.id,
-                            error.to_string().to_lowercase().contains("cancel"),
+                            ErrorKind::from_message(&error.to_string()) == ErrorKind::Cancelled,
                         )?;
                         self.emit(
                             &run.session_id,
@@ -1644,7 +1645,7 @@ impl Engine {
                                         &run.session_id,
                                         &run.id,
                                         &profile.id,
-                                        error.to_string().to_lowercase().contains("cancel"),
+                                        ErrorKind::from_message(&error.to_string()) == ErrorKind::Cancelled,
                                     )?;
                                     self.emit(&run.session_id,&run.id,"visual.review.failed",json!({"task":task,"message":error.to_string(),"round":visual_rounds+1}))?;
                                 }

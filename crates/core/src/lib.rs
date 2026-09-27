@@ -4,6 +4,7 @@ pub mod backup;
 pub mod browser;
 mod chat_stream;
 pub mod contracts;
+pub mod error_class;
 pub mod extensions;
 pub mod files;
 pub mod hooks;
